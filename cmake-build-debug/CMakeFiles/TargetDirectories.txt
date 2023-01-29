@@ -1,0 +1,3 @@
+/home/lelton/CLionProjects/C++/forca/cmake-build-debug/CMakeFiles/forca.dir
+/home/lelton/CLionProjects/C++/forca/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/lelton/CLionProjects/C++/forca/cmake-build-debug/CMakeFiles/rebuild_cache.dir
