@@ -97,11 +97,11 @@ void showErKick();
 
 void showMessageErrorKick(Letter *letter);
 
-int play();
+void play();
 
 char upperWord(char guess);
 
-Option menuOption();
+void menuOption();
 
 void executeSubMenu(int op);
 
@@ -265,7 +265,7 @@ void showMessageErrorKick(Letter *letter) {
     }
 }
 
-int play() {
+void play() {
     showWord(guessHits, false);
 
     while (!isHang && !isWinner) {
@@ -283,7 +283,7 @@ int play() {
     }
 }
 
-Option menuOption() {
+void menuOption() {
     int op;
     cout << "Opções" << endl;
     cout << "1 - TRY_AGAIN" << endl;
