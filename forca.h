@@ -1,3 +1,4 @@
+#pragma once
 #ifndef FORCA_FORCA_H
 #define FORCA_FORCA_H
 
@@ -22,7 +23,7 @@ string guessHits(secret_word.size(), '\0');
 bool isWinner = false;
 bool isHang = false;
 
-typedef enum {
+typedef enum OptionMenu {
     TRY_AGAIN = 1, NEW_WORD = 2, FINISH = 3, DEFAULT = 0
 } Option;
 
@@ -36,7 +37,6 @@ public:
     L(int qtd, char c, bool kick): qtd(qtd), qtdErKick(0), c(c), kick(kick), totalKick(0) {
         this->incrementKick();
     }
-
 
     int qtd{};
     char c{};
@@ -138,6 +138,8 @@ void OpSubMenu<TRY_AGAIN>::execute() {
 template<>
 void OpSubMenu<DEFAULT>::execute() {
     cout << "DEfault" << endl;
+    isWinner = false;
+    menuOption();
 }
 
 template<Option _t>

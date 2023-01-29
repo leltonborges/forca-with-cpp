@@ -1,7 +1,3 @@
-//
-// Created by leltonborges on 28/01/23.
-//
-
 #ifndef FORCA_DEMO_H
 #define FORCA_DEMO_H
 
