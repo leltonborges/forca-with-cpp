@@ -16,9 +16,10 @@
 #include <stdexcept>
 
 using namespace std;
-const string &pathfile = "../secret.txt";
+//const string &filePath = "../secret.txt";
+const string &filePath = "secret.txt";
 
-string secret_word = randWord(pathfile);
+string secret_word = randWord(filePath);
 string guessHits(secret_word.size(), '\0');
 bool isWinner = false;
 bool isHang = false;
@@ -120,7 +121,7 @@ void OpSubMenu<NEW_WORD>::execute() {
     string newWord;
     cout << "Informe a nova palavra" << endl;
     cin >> newWord;
-    addNewWord(pathfile, newWord);
+    addNewWord(filePath, newWord);
 }
 
 template<>
@@ -311,7 +312,7 @@ void executeSubMenu(int op) {
 }
 
 void tryAgain() {
-    secret_word = randWord(pathfile);
+    secret_word = randWord(filePath);
     string newGuessHist(secret_word.size(), '\0');
     guessHits = newGuessHist;
     reset();
