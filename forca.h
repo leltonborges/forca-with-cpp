@@ -19,23 +19,19 @@ using namespace std;
 //const string &filePath = "../secret.txt";
 const string &filePath = "secret.txt";
 
-string secret_word = randWord(filePath);
-string guessHits(secret_word.size(), '\0');
-bool isWinner = false;
-bool isHang = false;
-
 typedef enum OptionMenu {
     TRY_AGAIN = 1, NEW_WORD = 2, FINISH = 3, DEFAULT = 0
 } Option;
 
-typedef struct L {
+typedef struct LetterKickStruct {
 private:
     int qtdErKick{};
-    int totalKick{};
+    int qtdKick{};
 public:
-    L(): qtd(0), qtdErKick(0), c('\0'), kick(false), totalKick(0) {}
+    LetterKickStruct(): qtd(0), qtdErKick(0), c('\0'), kick(false), qtdKick(0) {}
 
-    L(int qtd, char c, bool kick): qtd(qtd), qtdErKick(0), c(c), kick(kick), totalKick(0) {
+    [[maybe_unused]] LetterKickStruct(int qtd, char c, bool kick): qtd(qtd), qtdErKick(0), c(c), kick(kick), qtdKick(
+            0) {
         this->incrementKick();
     }
 
@@ -54,61 +50,156 @@ public:
     [[nodiscard]] int qtdTotalKick() const;
 } Letter;
 
-bool L::erKick() const {
-    return this->kick && this->qtd == 0;
-}
-
-void L::incrementQtdEr() {
-    if (this->erKick()) this->qtdErKick++;
-}
-
-int L::qtdEr() const {
-    return this->qtdErKick;
-}
-
-int L::qtdTotalKick() const {
-    return this->totalKick;
-}
-
-void L::incrementKick() {
-    this->totalKick++;
-}
-
-struct MapLetter {
+struct LetterStruct {
     Letter letter;
 };
 
-map<char, MapLetter> kickLetter;
+typedef map<char, LetterStruct> MapperLetter;
+MapperLetter kickLetter;
 
-void isVerifyKick(char guess, Letter *letter);
+typedef struct wordStruct {
+private:
+    int qtdHang;
 
-void showWord(string word, bool winner);
+    void showFinish();
 
-void verifyCaracter(char caracter, Letter *letter);
+public:
+    wordStruct();
 
-bool isKickLetter(char letter);
+    [[maybe_unused]] explicit wordStruct(int qtdHang);
 
-Letter tryHit();
+    const string secretWord = randWord(filePath);
+    string guessWord{};
 
-bool isHits(Letter letter);
+    [[nodiscard]] bool isWinner() const;
 
-void showWinner();
+    [[nodiscard]] bool isHanged() const;
+
+    [[nodiscard]] bool isWinOrHang() const;
+
+
+    void showWinnerWord();
+
+    void showGuessWord();
+
+    void showGuessOrWinnerWord();
+
+    void hanged();
+} Word;
+
+wordStruct::wordStruct() {
+    string sec = string(this->secretWord.size(), '\0');
+    this->guessWord = sec;
+    this->qtdHang = 5;
+}
+
+
+[[maybe_unused]] wordStruct::wordStruct(int qtdHang) {
+    string sec = string(this->secretWord.size(), '\0');
+    this->guessWord = sec;
+    this->qtdHang = qtdHang;
+}
+
+bool wordStruct::isWinner() const {
+    return this->guessWord == this->secretWord;
+}
+
+bool wordStruct::isHanged() const {
+    return this->qtdHang == 0;
+}
+
+void wordStruct::hanged() {
+    this->qtdHang--;
+}
+
+void wordStruct::showFinish() {
+    if (this->isWinOrHang()) {
+        cout << "Parabésn você ganhou" << endl;
+        this->showWinnerWord();
+    } else {
+        cout << "Você perdeu" << endl;
+    }
+}
+
+void wordStruct::showWinnerWord() {
+    for (char s: this->secretWord) {
+        cout << s << " ";
+    }
+    endl(cout);
+}
+
+void wordStruct::showGuessWord() {
+//    cout << "Guess word" << endl;
+    for (char s: this->secretWord) {
+        if (s == '\0')
+            cout << " _ ";
+        else
+            cout << s << " ";
+    }
+    endl(cout);
+}
+
+bool wordStruct::isWinOrHang() const {
+    return this->isWinner() || this->isHanged();
+}
+
+void wordStruct::showGuessOrWinnerWord() {
+    if (this->isWinOrHang())
+        this->showFinish();
+    else
+        this->showGuessWord();
+}
+
+
+bool LetterKickStruct::erKick() const {
+    return this->kick && this->qtd == 0;
+}
+
+void LetterKickStruct::incrementQtdEr() {
+    if (this->erKick()) this->qtdErKick++;
+}
+
+int LetterKickStruct::qtdEr() const {
+    return this->qtdErKick;
+}
+
+int LetterKickStruct::qtdTotalKick() const {
+    return this->qtdKick;
+}
+
+void LetterKickStruct::incrementKick() {
+    this->qtdKick++;
+}
+
+void isVerifyKick(char guess, Letter &letter, Word &word);
+
+void verifyCaracter(Letter &letter, Word &word);
+
+Letter tryHitAndVerify(Word &word);
+
+bool isHits(const Letter &letter);
 
 void showErKick();
 
-void showMessageErrorKick(Letter *letter);
+void showMessageErrorKick(Letter &letter);
 
-void play();
+inline void play();
 
 char upperWord(char guess);
 
-void menuOption();
+inline void menuOption();
 
 void executeSubMenu(int op);
 
-void tryAgain();
+Word tryAgain();
 
-void reset();
+Word tryAgainAndReset();
+
+void reset(MapperLetter &letter);
+
+void replaceHits(Letter &letter, Word &word);
+
+bool isKick(char guess);
 
 template<Option _t>
 class OpSubMenu {
@@ -132,14 +223,12 @@ void OpSubMenu<FINISH>::execute() {
 
 template<>
 void OpSubMenu<TRY_AGAIN>::execute() {
-    tryAgain();
-    isWinner = false;
+    tryAgainAndReset();
 }
 
 template<>
 void OpSubMenu<DEFAULT>::execute() {
     cout << "DEfault" << endl;
-    isWinner = false;
     menuOption();
 }
 
@@ -149,90 +238,61 @@ void execute() {
     opSubMenu.execute();
 }
 
-void verifyCaracter(char caracter, Letter *letter) {
-    for (char i: secret_word)
-        if (i == caracter)
-            letter->qtd++;
+void verifyCaracter(Letter &letter, Word &word) {
+    for (char i: word.secretWord)
+        if (i == letter.c)
+            letter.qtd++;
 
-    kickLetter[letter->c].letter = {letter->qtd, letter->c, true};
+    kickLetter[letter.c].letter = {letter.qtd, letter.c, true};
     showMessageErrorKick(letter);
 }
 
-bool isKickLetter(char letter) {
-    return kickLetter[letter].letter.kick;
-}
-
-Letter tryHit() {
+Letter tryHitAndVerify(Word &word) {
     Letter letter;
     char guess{};
     cout << "Digite uma letra" << endl;
     cin >> guess;
 
     guess = upperWord(guess);
-
-    isVerifyKick(guess, &letter);
-
+    isVerifyKick(guess, letter, word);
     return letter;
 }
 
 char upperWord(char guess) { return char(toupper((unsigned char) guess)); }
 
-void isVerifyKick(char guess, Letter *letter) {
-    if (isKickLetter(guess)) {
+void isVerifyKick(char guess, Letter &letter, Word &word) {
+    if (isKick(guess)) {
         kickLetter[guess].letter.incrementQtdEr();
         kickLetter[guess].letter.incrementKick();
+        word.hanged();
         endl(cout);
         cout << "====== Letra já chutada ======" << endl;
         endl(cout);
     } else {
-        letter->c = guess;
-        verifyCaracter(guess, letter);
+        letter.c = guess;
+        verifyCaracter(letter, word);
     }
 
 }
 
-bool isHits(Letter letter) {
+bool isKick(char guess) {
+    return kickLetter[guess].letter.kick;
+}
+
+bool isHits(const Letter &letter) {
     return letter.qtd > 0;
 }
 
-void replaceHits(Letter letter) {
-    for (int i = 0; i < secret_word.size(); ++i) {
+void replaceHits(Letter &letter, Word &word) {
+    const string &secretWord = word.secretWord;
+    string &guessWord = word.guessWord;
+
+    for (int i = 0; i < secretWord.size(); ++i) {
         char caracter = upperWord(letter.c);
-        if (secret_word[i] == caracter)
-            guessHits[i] = caracter;
-    }
-}
+        char secWord = secretWord[i];
+        if (secWord == caracter)
+            guessWord[i] = caracter;
 
-void showWord(string word, bool winner) {
-    long wordSize = long(word.size());
-    int i = 0;
-
-    do {
-        if (winner)
-            cout << word[i];
-        else {
-            if (!word[i])
-                cout << "_";
-            else
-                cout << word[i];
-        }
-        cout << " ";
-        i++;
-    } while (wordSize > i);
-    endl(cout);
-}
-
-void showWinner() {
-    cout << "Parabésn você ganhou" << endl;
-    showWord(secret_word, true);
-}
-
-void verifyWinner() {
-
-    if (secret_word == guessHits) {
-        isWinner = true;
-        showWinner();
-        menuOption();
     }
 }
 
@@ -258,33 +318,35 @@ void showErKick() {
     cout << "Total chutes: " << totalKick << endl;
 }
 
-void showMessageErrorKick(Letter *letter) {
-    if (letter->qtd == 0) {
-        kickLetter[letter->c].letter.incrementQtdEr();
+void showMessageErrorKick(Letter &letter) {
+    if (letter.qtd == 0) {
+        kickLetter[letter.c].letter.incrementQtdEr();
         endl(cout);
         cout << "-:-: Você erro :-:-" << endl;
     }
 }
 
-void play() {
-    showWord(guessHits, false);
+inline void play() {
+    Word wordGame;
 
-    while (!isHang && !isWinner) {
-        Letter letter = tryHit();
+    wordGame.showGuessOrWinnerWord();
+
+    while (!wordGame.isWinOrHang()) {
+        Letter letter = tryHitAndVerify(wordGame);
         showErKick();
         if (isHits(letter))
-            replaceHits(letter);
+            replaceHits(letter, wordGame);
 
-        verifyWinner();
+        wordGame.showGuessOrWinnerWord();
 
-        if (!isWinner && !isHang) {
+        if (!wordGame.isWinOrHang()) {
             cout << "Palavra sorteada: " << endl;
-            showWord(guessHits, false);
+            wordGame.showGuessWord();
         }
     }
 }
 
-void menuOption() {
+inline void menuOption() {
     int op;
     cout << "Opções" << endl;
     cout << "1 - TRY_AGAIN" << endl;
@@ -311,18 +373,20 @@ void executeSubMenu(int op) {
     }
 }
 
-void tryAgain() {
-    secret_word = randWord(filePath);
-    string newGuessHist(secret_word.size(), '\0');
-    guessHits = newGuessHist;
-    reset();
+Word tryAgain() {
+    return {};
 }
 
-void reset() {
-    auto start = kickLetter.begin();
+Word tryAgainAndReset() {
+    reset(kickLetter);
+    return tryAgain();
+}
 
-    while (start != kickLetter.end()) {
-        start->second.letter = L();
+void reset(MapperLetter &letter) {
+    auto start = letter.begin();
+
+    while (start != letter.end()) {
+        start->second.letter = LetterKickStruct();
         ++start;
     }
 }
