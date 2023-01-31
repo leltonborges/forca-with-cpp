@@ -16,8 +16,7 @@
 #include <stdexcept>
 
 using namespace std;
-//const string &filePath = "../secret.txt";
-const string &filePath = "secret.txt";
+//const string &filePath = "secret.txt";
 
 typedef enum OptionMenu {
     TRY_AGAIN = 1, NEW_WORD = 2, FINISH = 3, DEFAULT = 0
@@ -28,7 +27,9 @@ private:
     int qtdErKick{};
     int qtdKick{};
 public:
-    LetterKickStruct(): qtd(0), qtdErKick(0), c('\0'), kick(false), qtdKick(0) {}
+    LetterKickStruct(): qtd(0), qtdErKick(0), c('\0'), kick(false), qtdKick(0) {
+        this->incrementKick();
+    }
 
     [[maybe_unused]] LetterKickStruct(int qtd, char c, bool kick): qtd(qtd), qtdErKick(0), c(c), kick(kick), qtdKick(
             0) {
@@ -60,15 +61,16 @@ MapperLetter kickLetter;
 typedef struct wordStruct {
 private:
     int qtdHang;
+    string filePath;
 
     void showFinish();
 
 public:
-    wordStruct();
+    [[maybe_unused]] explicit wordStruct(const string &filePath);
 
-    [[maybe_unused]] explicit wordStruct(int qtdHang);
+    [[maybe_unused]] explicit wordStruct(const string &filePath, int qtdHang);
 
-    const string secretWord = randWord(filePath);
+    string secretWord = randWord(filePath);
     string guessWord{};
 
     [[nodiscard]] bool isWinner() const;
@@ -77,7 +79,6 @@ public:
 
     [[nodiscard]] bool isWinOrHang() const;
 
-
     void showWinnerWord();
 
     void showGuessWord();
@@ -85,19 +86,22 @@ public:
     void showGuessOrWinnerWord();
 
     void hanged();
+
+    string getPathFile();
 } Word;
 
-wordStruct::wordStruct() {
-    string sec = string(this->secretWord.size(), '\0');
-    this->guessWord = sec;
+[[maybe_unused]] wordStruct::wordStruct(const string &filePath) {
+    this->guessWord = string(this->secretWord.size(), '\0');
     this->qtdHang = 5;
+    this->filePath = filePath;
 }
 
 
-[[maybe_unused]] wordStruct::wordStruct(int qtdHang) {
+[[maybe_unused]] wordStruct::wordStruct(const string &filePath, int qtdHang) {
     string sec = string(this->secretWord.size(), '\0');
     this->guessWord = sec;
     this->qtdHang = qtdHang;
+    this->filePath = filePath;
 }
 
 bool wordStruct::isWinner() const {
@@ -105,7 +109,7 @@ bool wordStruct::isWinner() const {
 }
 
 bool wordStruct::isHanged() const {
-    return this->qtdHang == 0;
+    return this->qtdHang >= 0;
 }
 
 void wordStruct::hanged() {
@@ -118,6 +122,7 @@ void wordStruct::showFinish() {
         this->showWinnerWord();
     } else {
         cout << "Você perdeu" << endl;
+        this->showWinnerWord();
     }
 }
 
@@ -129,8 +134,7 @@ void wordStruct::showWinnerWord() {
 }
 
 void wordStruct::showGuessWord() {
-//    cout << "Guess word" << endl;
-    for (char s: this->secretWord) {
+    for (char s: this->guessWord) {
         if (s == '\0')
             cout << " _ ";
         else
@@ -148,6 +152,10 @@ void wordStruct::showGuessOrWinnerWord() {
         this->showFinish();
     else
         this->showGuessWord();
+}
+
+string wordStruct::getPathFile() {
+    return this->filePath;
 }
 
 
@@ -187,13 +195,11 @@ inline void play();
 
 char upperWord(char guess);
 
-inline void menuOption();
+void menuOption(Word &word);
 
-void executeSubMenu(int op);
+void executeSubMenu(int op, Word &word);
 
-Word tryAgain();
-
-Word tryAgainAndReset();
+Word tryAgainAndReset(Word &word);
 
 void reset(MapperLetter &letter);
 
@@ -204,38 +210,39 @@ bool isKick(char guess);
 template<Option _t>
 class OpSubMenu {
 public:
-    void execute();
+    void execute(Word &word);
 };
 
 template<>
-void OpSubMenu<NEW_WORD>::execute() {
+void OpSubMenu<NEW_WORD>::execute(Word &word) {
     string newWord;
     cout << "Informe a nova palavra" << endl;
     cin >> newWord;
-    addNewWord(filePath, newWord);
+    addNewWord(word.getPathFile(), newWord);
 }
 
 template<>
-void OpSubMenu<FINISH>::execute() {
+void OpSubMenu<FINISH>::execute(Word &word) {
     cout << "Fim de jogo" << endl;
+    word.showWinnerWord();
     exit(EXIT_SUCCESS);
 }
 
 template<>
-void OpSubMenu<TRY_AGAIN>::execute() {
-    tryAgainAndReset();
+void OpSubMenu<TRY_AGAIN>::execute(Word &word) {
+    word = tryAgainAndReset(word);
 }
 
 template<>
-void OpSubMenu<DEFAULT>::execute() {
-    cout << "DEfault" << endl;
-    menuOption();
+void OpSubMenu<DEFAULT>::execute(Word &word) {
+    cout << "Default" << endl;
+    menuOption(word);
 }
 
 template<Option _t>
-void execute() {
+void execute(Word &word) {
     OpSubMenu<_t> opSubMenu;
-    opSubMenu.execute();
+    opSubMenu.execute(word);
 }
 
 void verifyCaracter(Letter &letter, Word &word) {
@@ -327,10 +334,9 @@ void showMessageErrorKick(Letter &letter) {
 }
 
 inline void play() {
-    Word wordGame;
-
+    const string filePath = "secret.txt";
+    Word wordGame{filePath};
     wordGame.showGuessOrWinnerWord();
-
     while (!wordGame.isWinOrHang()) {
         Letter letter = tryHitAndVerify(wordGame);
         showErKick();
@@ -338,15 +344,13 @@ inline void play() {
             replaceHits(letter, wordGame);
 
         wordGame.showGuessOrWinnerWord();
-
-        if (!wordGame.isWinOrHang()) {
-            cout << "Palavra sorteada: " << endl;
-            wordGame.showGuessWord();
+        if (wordGame.isWinOrHang()) {
+            menuOption(wordGame);
         }
     }
 }
 
-inline void menuOption() {
+void menuOption(Word &word) {
     int op;
     cout << "Opções" << endl;
     cout << "1 - TRY_AGAIN" << endl;
@@ -354,32 +358,28 @@ inline void menuOption() {
     cout << "3 - FINISH" << endl;
     cin >> op;
 
-    executeSubMenu(op);
+    executeSubMenu(op, word);
 }
 
-void executeSubMenu(int op) {
+void executeSubMenu(int op, Word &word) {
     switch (op) {
         case static_cast<int>(Option::TRY_AGAIN) :
-            execute<TRY_AGAIN>();
+            execute<TRY_AGAIN>(word);
             break;
         case static_cast<int>(Option::FINISH):
-            execute<FINISH>();
+            execute<FINISH>(word);
             break;
         case static_cast<int>(Option::NEW_WORD):
-            execute<NEW_WORD>();
+            execute<NEW_WORD>(word);
             break;
         default:
-            execute<DEFAULT>();
+            execute<DEFAULT>(word);
     }
 }
 
-Word tryAgain() {
-    return {};
-}
-
-Word tryAgainAndReset() {
+Word tryAgainAndReset(Word &word) {
     reset(kickLetter);
-    return tryAgain();
+    return Word{word.getPathFile()};
 }
 
 void reset(MapperLetter &letter) {

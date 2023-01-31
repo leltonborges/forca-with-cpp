@@ -44,6 +44,9 @@ long countLineFile(const string &pathfile) {
 }
 
 ifstream openFileRead(const string &pathfile) {
+    ofstream file2("abac.txt");
+    file2 << "lelton" <<endl;
+    file2.close();
     ifstream file(pathfile);
     if (!file) {
         cerr << "Can't open input file" << endl;
