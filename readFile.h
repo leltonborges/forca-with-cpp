@@ -13,29 +13,29 @@ using namespace std;
 
 vector<string> readFile(const string &filePath);
 
-ifstream openFileRead(const string &pathfile);
+ifstream openFileRead(const string &filePath);
 
-long countLineFile(const string &pathfile);
+long countLineFile(const string &filePath);
 
-string randWord(const string &pathfile);
+string randWord(const string &filePath);
 
-void addNewWord(const string &filePath, const string& newWord);
+void addNewWord(const string &filePath, const string &newWord);
 
-void isOpen(const ifstream &file);
+void isOpen(const ifstream &filePath);
 
-void isOpen(const ofstream &file);
+void isOpen(const ofstream &filePath);
 
-ofstream openFileWriter(const string &path);
+ofstream openFileWriter(const string &filePath);
 
-string randWord(const string &pathfile) {
-    const vector<string> &words = readFile(pathfile);
+string randWord(const string &filePath) {
+    const vector<string> &words = readFile(filePath);
     srand(time(NULL));
     long randNum = rand() % words.size();
     return words[randNum];
 }
 
-long countLineFile(const string &pathfile) {
-    ifstream file(pathfile);
+long countLineFile(const string &filePath) {
+    ifstream file(filePath);
     if (!file.is_open()) {
         cerr << "file is close" << endl;
         exit(EXIT_FAILURE);
@@ -43,11 +43,8 @@ long countLineFile(const string &pathfile) {
     return std::count(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), '\n');
 }
 
-ifstream openFileRead(const string &pathfile) {
-    ofstream file2("abac.txt");
-    file2 << "lelton" <<endl;
-    file2.close();
-    ifstream file(pathfile);
+ifstream openFileRead(const string &filePath) {
+    ifstream file(filePath);
     if (!file) {
         cerr << "Can't open input file" << endl;
         exit(EXIT_FAILURE);
@@ -55,8 +52,8 @@ ifstream openFileRead(const string &pathfile) {
     return file;
 }
 
-ofstream openFileWriter(const string &pathfile) {
-    ofstream file(pathfile);
+ofstream openFileWriter(const string &filePath) {
+    ofstream file(filePath);
     if (!file) {
         cerr << "Can't open input file" << endl;
         exit(EXIT_FAILURE);
@@ -77,7 +74,7 @@ vector<string> readFile(const string &filePath) {
     return words;
 }
 
-void addNewWord(const string &filePath, const string& newWord) {
+void addNewWord(const string &filePath, const string &newWord) {
     vector<string> words = readFile(filePath);
     ofstream file = openFileWriter(filePath);
     isOpen(file);

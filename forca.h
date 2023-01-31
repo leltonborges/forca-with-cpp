@@ -66,11 +66,11 @@ private:
     void showFinish();
 
 public:
-    [[maybe_unused]] explicit wordStruct(const string &filePath);
+    [[maybe_unused]] explicit wordStruct(const string& filePath);
 
-    [[maybe_unused]] explicit wordStruct(const string &filePath, int qtdHang);
+    [[maybe_unused]] explicit wordStruct(const string& filePath, int qtdHang);
 
-    string secretWord = randWord(filePath);
+    string secretWord{};
     string guessWord{};
 
     [[nodiscard]] bool isWinner() const;
@@ -90,14 +90,16 @@ public:
     string getPathFile();
 } Word;
 
-[[maybe_unused]] wordStruct::wordStruct(const string &filePath) {
+[[maybe_unused]] wordStruct::wordStruct(const string& filePath) {
+    this->secretWord =  randWord(filePath);
     this->guessWord = string(this->secretWord.size(), '\0');
     this->qtdHang = 5;
     this->filePath = filePath;
 }
 
 
-[[maybe_unused]] wordStruct::wordStruct(const string &filePath, int qtdHang) {
+[[maybe_unused]] wordStruct::wordStruct(const string& filePath, int qtdHang) {
+    this->secretWord =  randWord(filePath);
     string sec = string(this->secretWord.size(), '\0');
     this->guessWord = sec;
     this->qtdHang = qtdHang;
@@ -109,7 +111,7 @@ bool wordStruct::isWinner() const {
 }
 
 bool wordStruct::isHanged() const {
-    return this->qtdHang >= 0;
+    return this->qtdHang <= 0;
 }
 
 void wordStruct::hanged() {
@@ -117,7 +119,7 @@ void wordStruct::hanged() {
 }
 
 void wordStruct::showFinish() {
-    if (this->isWinOrHang()) {
+    if (this->isWinner()) {
         cout << "Parabésn você ganhou" << endl;
         this->showWinnerWord();
     } else {
@@ -207,6 +209,8 @@ void replaceHits(Letter &letter, Word &word);
 
 bool isKick(char guess);
 
+void wordGuess(Word &wordGame);
+
 template<Option _t>
 class OpSubMenu {
 public:
@@ -231,6 +235,7 @@ void OpSubMenu<FINISH>::execute(Word &word) {
 template<>
 void OpSubMenu<TRY_AGAIN>::execute(Word &word) {
     word = tryAgainAndReset(word);
+    wordGuess(word);
 }
 
 template<>
@@ -336,6 +341,10 @@ void showMessageErrorKick(Letter &letter) {
 inline void play() {
     const string filePath = "secret.txt";
     Word wordGame{filePath};
+    wordGuess(wordGame);
+}
+
+void wordGuess(Word &wordGame) {
     wordGame.showGuessOrWinnerWord();
     while (!wordGame.isWinOrHang()) {
         Letter letter = tryHitAndVerify(wordGame);
